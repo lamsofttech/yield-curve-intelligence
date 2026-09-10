@@ -140,3 +140,16 @@ nodes around the target maturity? Showing the full-grid catastrophe is
 more honest and more interesting pedagogically; defaulting to it might
 also make Lagrange look unfairly useless if not explained well in the UI.
 Decision deferred to Phase 7.
+
+## Phase 5 — Leave-one-maturity-out validation
+
+Key design decision: only *interior* maturities are "eligible" -- removing
+an endpoint would make the held-out estimate an extrapolation, not an
+interpolation, contaminating the measurement. On the real full grid,
+removing the 20Y node (interior once 30Y anchors the endpoint) and
+refitting Lagrange gives an error of about -1,228,248 percentage points --
+even more extreme than Phase 4's -19,627% single-point example. PCHIP wins
+clearly on this date (MAE 0.047, RMSE 0.068, max error 0.18), with linear
+and cubic spline close behind -- real, evidence-based grounds to disqualify
+Lagrange on the full grid and to prefer PCHIP *on this date*, while still
+not over-generalizing from 9 interior points to "PCHIP is always best."
