@@ -18,8 +18,17 @@ _LABEL_PATTERN = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*(Mo|Month|Yr)\s*$", re.IGNOR
 def parse_maturity_label(label: str) -> float:
     """Convert one Treasury maturity label to maturity in years.
 
+    Rounded to 10 decimal places -- far finer than needed to distinguish
+    any two real maturities (the closest real pair, 1mo vs 1.5mo, differ by
+    about 0.04), but enough to give a canonical value that survives a
+    round-trip through CSV serialization unchanged. Without this, "1 Mo"
+    parsed fresh (0.08333333333333333) does not exactly equal the same
+    value read back from a CSV written by pandas.to_csv (which truncates
+    to 15 significant digits, giving 0.0833333333333333) -- a real bug hit
+    while building the Phase 6 historical panel; see LEARNING_LOG.md.
+
     >>> parse_maturity_label("1 Mo")
-    0.08333333333333333
+    0.0833333333
     >>> parse_maturity_label("1.5 Month")
     0.125
     >>> parse_maturity_label("10 Yr")
@@ -31,6 +40,5 @@ def parse_maturity_label(label: str) -> float:
 
     value = float(match.group(1))
     unit = match.group(2).lower()
-    if unit in ("mo", "month"):
-        return value / 12.0
-    return value
+    years = value / 12.0 if unit in ("mo", "month") else value
+    return round(years, 10)

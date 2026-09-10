@@ -11,7 +11,9 @@ def _tidy_two_days() -> pd.DataFrame:
         ("2026-01-03", [3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.6, 4.7]),
     ]:
         for maturity, value in zip(COMMON_MATURITIES, values, strict=True):
-            rows.append({"date": pd.Timestamp(date), "maturity_years": maturity, "yield_pct": value})
+            rows.append(
+                {"date": pd.Timestamp(date), "maturity_years": maturity, "yield_pct": value}
+            )
     return pd.DataFrame(rows)
 
 

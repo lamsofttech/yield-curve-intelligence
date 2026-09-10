@@ -84,3 +84,36 @@ and Model Validation (Phase 5) sections exist to make visible.
 
 Runtime deps separate from dev-only tools (pytest, ruff), so the deployed
 app's Docker image doesn't carry test/lint tooling it never uses.
+
+## 2026-09-09 — Historical dataset bundled/committed, not fetched live at startup
+
+data/historical/treasury_2016_2026.csv (real, ~920KB, 32,715 tidy rows)
+is committed, distinct from data/sample/ (small offline fallback for the
+single-curve views). Reason: a live 11-year fetch takes ~3.5 minutes
+(measured, not estimated) -- unacceptable as an app cold-start delay, and
+PCA/anomaly detection are backward-looking analyses that don't need
+data from the last few minutes to be meaningful. Market Overview and the
+Interpolation Lab still use the live loader with graceful fallback.
+
+## 2026-09-09 — Real PCA result: reproduces Litterman-Scheinkman ordering
+
+On 2016-09-09's cut of history (2016-01-04 to 2026-09-08, 2,670 daily
+changes, 11 common maturities): PC1 explains 72.6% of variance (same sign
+across all maturities -> Level), PC2 10.6% (one sign change, short vs
+long -> Slope), PC3 9.1% (two sign changes, U-shape -> Curvature).
+Together, 92.25%. This matches the classic finding (Litterman &
+Scheinkman, 1991) both in ordering and in "three factors explain the
+overwhelming majority of variance" -- reproduced from real data, not
+assumed. label_components() assigns labels from the observed loading
+shape, never from component order or a hardcoded assumption.
+
+## 2026-09-09 — Real anomaly detection surfaces genuine historical events
+
+Isolation Forest on standardized daily yield levels (2016-2026, 11
+maturities) independently flags October 2023 (the real 10Y Treasury yield
+spike to ~5%, highest since 2007) and early March 2020 (COVID market
+panic onset) as among the most unusual dates in the entire window -- both
+well-known genuine market events, not arbitrary. The current date
+(2026-09-08) ranks in the 1.3rd percentile of historical unusualness --
+a striking real result, surfaced in the app with the required "not a
+trading signal" caveat front and center.

@@ -15,7 +15,8 @@ def _synthetic_curve_levels(n_days: int = 300, seed: int = 2026) -> pd.DataFrame
 
     # Inject a handful of deliberately extreme/inverted days.
     extreme_dates = panel.index[[10, 50, 150]]
-    panel.loc[extreme_dates] = [8.0, 2.0, 1.5, 1.0, 0.8, 0.5]  # sharply inverted, way off-distribution
+    # sharply inverted, way off-distribution
+    panel.loc[extreme_dates] = [8.0, 2.0, 1.5, 1.0, 0.8, 0.5]
     return panel
 
 

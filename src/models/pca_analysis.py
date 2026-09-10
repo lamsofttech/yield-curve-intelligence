@@ -58,6 +58,35 @@ def fit_pca(daily_change_panel: pd.DataFrame, n_components: int = 3) -> PCAResul
     )
 
 
+def label_components(loadings: pd.DataFrame) -> dict[str, str]:
+    """Assign level/slope/curvature labels based on the actual observed
+    loading shape (via describe_loadings), not component order or any
+    assumption about which PC "should" be which.
+
+    Verified on the real 2016-2026 history (see DECISIONS.md): PC1 same-
+    sign (level), PC2 one sign change (slope), PC3 two sign changes
+    (curvature) -- this is the classic ordering (Litterman & Scheinkman,
+    1991), reproduced here from real data rather than assumed. A component
+    with a shape not matching any of the three patterns is labeled
+    "unclassified" rather than forced into one of the three -- and note
+    that a component's *sign* is arbitrary (PCA could equally have
+    returned every loading in a column negated, representing the exact
+    same factor) - only the *shape* of the loadings is used here.
+    """
+    descriptions = describe_loadings(loadings)
+    labels = {}
+    for component, description in descriptions.items():
+        if "parallel-shift-like" in description:
+            labels[component] = "Level"
+        elif "slope-like" in description:
+            labels[component] = "Slope"
+        elif "curvature-like" in description:
+            labels[component] = "Curvature"
+        else:
+            labels[component] = "Unclassified"
+    return labels
+
+
 def describe_loadings(loadings: pd.DataFrame) -> dict[str, str]:
     """Produce a human-readable shape description for each component's
     loadings, WITHOUT assuming which component is "level"/"slope"/

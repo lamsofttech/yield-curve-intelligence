@@ -17,6 +17,7 @@ import requests
 from data.treasury_client import fetch_years, tidy_wide_table
 
 SAMPLE_DIR = Path(__file__).resolve().parents[2] / "data" / "sample"
+HISTORICAL_DIR = Path(__file__).resolve().parents[2] / "data" / "historical"
 
 
 @dataclass(frozen=True)
@@ -58,4 +59,28 @@ def load_sample() -> pd.DataFrame:
     frames = [tidy_wide_table(pd.read_csv(csv_path)) for csv_path in csv_paths]
     if not frames:
         raise FileNotFoundError(f"No bundled sample data found in {SAMPLE_DIR}")
+    return pd.concat(frames, ignore_index=True)
+
+
+def load_historical() -> pd.DataFrame:
+    """Load the bundled multi-year historical dataset (data/historical/)
+    used by the PCA and anomaly-detection features.
+
+    Deliberately bundled/committed rather than fetched live at app
+    startup: a live 2016-2026 fetch takes several minutes (11 sequential
+    year-requests to Treasury.gov -- measured, not estimated), which is a
+    bad cold-start experience for a Space, and PCA/anomaly detection are
+    inherently backward-looking analyses that do not need to reflect data
+    from the last few minutes to be meaningful. The Market Overview and
+    Interpolation Lab sections still use load_curve_data() for the latest
+    single-day curve, live with graceful fallback.
+
+    Unlike data/sample/ (Treasury's original wide CSV shape), this file is
+    stored already tidy (long format, with maturity_years pre-computed) --
+    see scripts or DECISIONS.md for how it was built.
+    """
+    csv_paths = sorted(HISTORICAL_DIR.glob("*.csv"))
+    if not csv_paths:
+        raise FileNotFoundError(f"No bundled historical data found in {HISTORICAL_DIR}")
+    frames = [pd.read_csv(csv_path, parse_dates=["date"]) for csv_path in csv_paths]
     return pd.concat(frames, ignore_index=True)

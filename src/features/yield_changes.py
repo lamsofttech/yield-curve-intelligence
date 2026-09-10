@@ -12,12 +12,23 @@ from __future__ import annotations
 
 import pandas as pd
 
+from utils.maturity import parse_maturity_label
+
 # Present in Treasury's published grid continuously since at least 2016.
 # 2 Mo (~2020), 4 Mo (~2022), and 1.5 Month (2026) were all added later and
 # are excluded here so every row of the panel has the same columns
 # regardless of which year it came from.
-COMMON_MATURITIES = [1 / 12, 3 / 12, 6 / 12, 1.0, 2.0, 3.0, 5.0, 7.0, 10.0, 20.0, 30.0]
-COMMON_MATURITY_LABELS = ["1 Mo", "3 Mo", "6 Mo", "1 Yr", "2 Yr", "3 Yr", "5 Yr", "7 Yr", "10 Yr", "20 Yr", "30 Yr"]
+#
+# Derived from the labels via parse_maturity_label rather than written as
+# separate float literals (e.g. 1 / 12) -- a second hand-written source of
+# "the same" value is exactly how the CSV round-trip precision bug in
+# LEARNING_LOG.md happened: two independently-computed values that *should*
+# be identical but weren't, bit-for-bit. One source of truth avoids that
+# class of bug entirely rather than just papering over this one instance.
+COMMON_MATURITY_LABELS = [
+    "1 Mo", "3 Mo", "6 Mo", "1 Yr", "2 Yr", "3 Yr", "5 Yr", "7 Yr", "10 Yr", "20 Yr", "30 Yr",
+]
+COMMON_MATURITIES = [parse_maturity_label(label) for label in COMMON_MATURITY_LABELS]
 
 
 def to_wide_panel(tidy: pd.DataFrame, maturities: list[float] | None = None) -> pd.DataFrame:
