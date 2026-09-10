@@ -53,25 +53,25 @@ def validate_yield_range(table: pd.DataFrame, min_pct: float = -2.0, max_pct: fl
 def validate_maturity_ordering(table: pd.DataFrame) -> None:
     """Check that, for every date, maturities appear in strictly increasing order.
 
-    TODO(you): implement this one.
-
-    Why it matters: every interpolation method downstream (Lagrange, linear,
-    spline, PCHIP) assumes its input x-values (maturities) are sorted and
-    distinct for a given curve. If this check ever fails, it means
-    something upstream (Treasury's own data, or our tidying step) produced
-    a curve out of order -- better to catch that here with a clear error
-    than to have Lagrange silently misbehave on scrambled input.
-
-    Hints:
-    - Group `table` by "date".
-    - Within each group, check `maturity_years` is strictly increasing
-      (each value bigger than the last -- not just non-decreasing, since we
-      already reject exact duplicates in validate_no_duplicate_observations).
-    - pandas: a Series `s` is strictly increasing if `s.is_monotonic_increasing`
-      is True AND `s` has no duplicates -- or check `(s.diff().dropna() > 0).all()`.
-    - Raise ValueError naming the offending date if any group fails.
+    Every interpolation method downstream (Lagrange, linear, spline, PCHIP)
+    assumes its input x-values (maturities) are sorted and distinct for a
+    given curve. If this ever fails, something upstream (Treasury's own
+    data, or our tidying step) produced a curve out of order -- better to
+    catch that here with a clear error than have Lagrange silently
+    misbehave on scrambled input.
     """
-    raise NotImplementedError("validate_maturity_ordering: implement me (see TODO above)")
+    for observation_date, group in table.groupby("date"):
+        maturities = group["maturity_years"]
+        # Series.is_monotonic_increasing allows equal neighbors (it means
+        # "non-decreasing"), so it would wrongly pass e.g. [1.0, 1.0, 2.0].
+        # Checking every step is strictly positive enforces "strictly
+        # increasing" without depending on validate_no_duplicate_observations
+        # having already run first.
+        if not (maturities.diff().dropna() > 0).all():
+            raise ValueError(
+                f"Maturities not strictly increasing for date {observation_date}: "
+                f"{maturities.tolist()}"
+            )
 
 
 def validate_curve_data(table: pd.DataFrame) -> None:

@@ -84,10 +84,18 @@ split).
 **Decisions made:** see `DECISIONS.md` (live endpoint verified, evolving
 schema, sample data bundling approach).
 
-**Left for the user:** `validate_maturity_ordering` in
-`src/data/validation.py` (see the TODO/hints in its docstring) — the tests
-in `tests/data/test_validation.py` marked `xfail` will flip to `XPASS` once
-it's implemented correctly.
+**`validate_maturity_ordering`:** left for the user; not attempted, so the
+assistant implemented it. Caught a real subtlety while doing so: pandas'
+`Series.is_monotonic_increasing` actually means *non-decreasing* (it
+accepts equal neighbors), not *strictly* increasing — using it directly
+would have silently accepted a table with a duplicate maturity on the same
+date. Fixed by checking `(maturities.diff().dropna() > 0).all()` instead,
+which requires every consecutive step to be strictly positive. Added a
+regression test (`test_validate_maturity_ordering_rejects_equal_neighbors`)
+specifically for that case. **Open item:** re-implement this function
+yourself from the docstring alone (now cleaned of hints) before Phase 4,
+and see if you land on the same fix without being told about the
+`is_monotonic_increasing` trap first.
 
 **Open questions to revisit:** should the bundled sample data (currently
 2025–2026 only) be extended with a longer historical slice specifically

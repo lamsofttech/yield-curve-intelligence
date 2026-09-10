@@ -59,24 +59,31 @@ def test_validate_yield_range_rejects_implausible_yield():
         validate_yield_range(bad)
 
 
-# --- validate_maturity_ordering: implement this one yourself (see the
-# TODO in src/data/validation.py). These tests currently xfail -- once you
-# implement the function correctly, re-run pytest and they should flip to
-# XPASS, which is your signal that it's done.
-
-
-@pytest.mark.xfail(reason="validate_maturity_ordering not implemented yet", strict=False)
 def test_validate_maturity_ordering_accepts_sorted_table():
     validate_maturity_ordering(_valid_table())  # already sorted: 0.25, 1.0, 10.0
 
 
-@pytest.mark.xfail(reason="validate_maturity_ordering not implemented yet", strict=False)
 def test_validate_maturity_ordering_rejects_out_of_order_table():
     bad = _valid_table().iloc[[1, 0, 2]].reset_index(drop=True)  # 1.0, 0.25, 10.0 -- out of order
     with pytest.raises(ValueError):
         validate_maturity_ordering(bad)
 
 
-@pytest.mark.xfail(reason="validate_curve_data depends on validate_maturity_ordering", strict=False)
+def test_validate_maturity_ordering_rejects_equal_neighbors():
+    # Series.is_monotonic_increasing would wrongly accept this (it means
+    # "non-decreasing"); this table has two rows at maturity_years=1.0 for
+    # the same date, which must be rejected as not *strictly* increasing.
+    bad = pd.DataFrame(
+        {
+            "date": pd.to_datetime(["2026-09-08"] * 3),
+            "maturity_years": [0.25, 1.0, 1.0],
+            "maturity_label": ["3 Mo", "1 Yr", "1 Yr (dup)"],
+            "yield_pct": [3.94, 4.15, 4.15],
+        }
+    )
+    with pytest.raises(ValueError):
+        validate_maturity_ordering(bad)
+
+
 def test_validate_curve_data_runs_all_checks():
     validate_curve_data(_valid_table())  # must not raise
