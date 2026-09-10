@@ -230,3 +230,35 @@ torch actually installed locally (not just gracefully absent) -- the
 real numbers: median divergence 1,560,313 percentage points across 2,671
 days, worst case 46,435,627 pp on 2023-04-21. Confirmed the app still
 imports and serves correctly both with and without torch present.
+
+## Phase 10 — Deployment (complete, verified)
+
+GitHub: pushed successfully once workflow OAuth scope was granted.
+GitHub Actions itself is blocked by the known account billing lock
+(same as the portfolio project) -- documented in DECISIONS.md, not
+something fixable from here.
+
+Hugging Face Space: created (nyakslamo/yield-curve-intelligence,
+ZeroGPU hardware -- same free-tier constraint as before), all files
+uploaded, build succeeded, and **actually verified** rather than assumed:
+
+- Public URL responds (curl -> 200).
+- /config confirms all 8 tabs present, including "GPU Historical Stress
+  Test" -- torch/spaces installed correctly on HF's side.
+- Called the real Gradio API (gradio_client) for all three interactive
+  endpoints, not just loaded the page:
+  - /run_interpolation_lab: results match local verification exactly
+    (Lagrange 5.2775, PCHIP 4.504, etc. at 4Y on 2026-09-08).
+  - /run_model_validation: results match exactly (PCHIP best, MAE
+    0.0465; Lagrange RMSE 409,583.71).
+  - /run_gpu_stress_test: **ran on a real GPU** ("Computed on device:
+    cuda") -- confirming the ZeroGPU allocation genuinely worked, not
+    just that the tab existed. Numbers matched the local CPU computation
+    exactly (median 1,560,313 pp divergence, worst 46,435,627 pp on
+    2023-04-21), confirming correctness is device-independent as it
+    should be.
+
+This is the actual bar the project's rules set: "never claim deployment
+succeeded until the public URL has been opened and verified" and "test
+the main user flows using the deployed version" -- both done for real,
+not asserted.
