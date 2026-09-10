@@ -52,6 +52,34 @@ table, and preserves a variable/NaN-containing column set per year rather
 than forcing one fixed schema. Downstream code (interpolation, PCA) must
 each decide how to handle a maturity that's missing for a given date.
 
+## 2026-09-09 — Lagrange: classical direct form, not barycentric
+
+Implemented the direct O(n^2)-per-point formula (sum of y_j * basis
+product), not the numerically superior barycentric reformulation, because
+the goal is a visible, directly-derivation-traceable mechanism, not
+production efficiency. Cross-checked against scipy's BarycentricInterpolator
+(recommended) and the now-deprecated scipy.interpolate.lagrange (both
+agree to 1e-8).
+
+## 2026-09-09 — Linear/spline/PCHIP wrap trusted libraries, not hand-derived
+
+Only Lagrange is implemented from scratch, per the project's own emphasis.
+Cubic spline and PCHIP derivations (tridiagonal systems, shape-preserving
+slope constraints) are substantial topics on their own; the pedagogical
+value for these three is in comparing behavior/tradeoffs, not re-deriving
+each. Shared validation/extrapolation-warning logic factored into
+src/interpolation/base.py so all four methods behave consistently.
+
+## 2026-09-09 — Empirical confirmation: Lagrange diverges catastrophically
+## on the real, full 11-node grid
+
+At 15Y (the 10Y-20Y gap), degree-10 Lagrange through all real nodes gives
+approximately -19,627% -- confirming the Phase 0 reasoning task's
+prediction, but far more extreme than the earlier 3-node worked example
+suggested. Linear/spline/PCHIP all agree near 5.03-5.08% at the same
+point. This is the core empirical result the Interpolation Lab (Phase 7)
+and Model Validation (Phase 5) sections exist to make visible.
+
 ## 2026-09-09 — requirements.txt / requirements-dev.txt split
 
 Runtime deps separate from dev-only tools (pytest, ruff), so the deployed

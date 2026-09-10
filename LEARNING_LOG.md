@@ -101,3 +101,42 @@ and see if you land on the same fix without being told about the
 2025–2026 only) be extended with a longer historical slice specifically
 for the PCA/anomaly-detection work in Phase 6, given that phase wants
 ~10 years of live history? Deferred until Phase 6.
+
+## Phase 3 — Lagrange interpolation from first principles
+
+Derived the formula and the "switch" property of each basis polynomial
+L_j(x), worked a real 3-node example by hand (1Yr/5Yr/10Yr -> estimate at
+3Yr), verified the arithmetic by computation before presenting it, and
+compared the real observed 3Yr yield (4.44%) against the 3-node estimate
+(4.386%) as a concrete illustration of estimation error. Implemented the
+classical direct-form algorithm from scratch; cross-checked against both
+scipy.interpolate.BarycentricInterpolator and the (now-deprecated, scipy
+itself flagged this live) scipy.interpolate.lagrange.
+
+## Phase 4 — Linear, cubic spline, PCHIP + common interface
+
+Added the other three methods as thin wrappers around scipy, behind a
+shared `METHODS` registry (dict of name -> callable, all with the same
+signature) so validation code doesn't need an if/elif per method.
+Extracted validate_nodes/warn_if_extrapolating into base.py (previously
+duplicated only inside lagrange.py -- caught and fixed before it could be
+duplicated three more times).
+
+Verified numerically before writing any test/claim about it:
+- numpy.interp clamps rather than extrapolates beyond the node range
+  (flat, not extended) -- different from the other three methods.
+- Natural cubic spline overshoots to [-0.25, 1.25] on a step-like dataset
+  bounded in [0, 1]; PCHIP stays exactly within [0, 1] on the same data.
+  This is *the* reason PCHIP exists as a distinct method.
+- On the real, full 11-node Treasury grid, Lagrange at 15Y gives
+  approximately -19,627%, while linear/spline/PCHIP all agree near
+  5.03-5.08%. Not a bug -- a real, dramatic demonstration of Runge
+  phenomenon, far more extreme than the tame 3-node Phase 3 example.
+
+**Open question to revisit:** given how extreme the full-grid Lagrange
+divergence is, should the Interpolation Lab (Phase 7) default to showing
+Lagrange fit on the *full* grid, or default to a smaller/nearby subset of
+nodes around the target maturity? Showing the full-grid catastrophe is
+more honest and more interesting pedagogically; defaulting to it might
+also make Lagrange look unfairly useless if not explained well in the UI.
+Decision deferred to Phase 7.
