@@ -192,3 +192,25 @@ repeating that debugging detour.
   constraint hit on the portfolio project. Dockerfile can be written and
   reviewed but not locally built; Phase 9's CI docker job is the first
   actual build verification.
+
+## Phase 9 — Docker and CI/CD
+
+No Docker available in this environment (same as the portfolio project),
+so the image itself was never actually built locally. Instead: staged an
+isolated directory containing *exactly* the files the Dockerfile's COPY
+instructions would put into the image, built a fresh venv from only
+requirements.txt (not requirements-dev.txt, matching the image), and ran
+app.py from there.
+
+**This caught a real bug before it reached a real container:** the
+original Dockerfile copied src/, data/sample/, app.py, and pyproject.toml
+-- but not data/historical/, which app.py needs at import time (the PCA
+and anomaly-detection tabs load it on startup). Without this fix, the
+container would have built successfully and then crashed immediately on
+first run. Fixed, then re-verified the staged copy actually serves (curl
+-> 200) and the exact HEALTHCHECK command succeeds.
+
+Real Docker build verification is deferred to CI's docker job (Phase 9,
+runs on GitHub's Ubuntu runners, which do have Docker) -- "do not claim
+CI passed until we inspect the result" per the project rules; this local
+staging exercise is a strong proxy, not a substitute for that inspection.
