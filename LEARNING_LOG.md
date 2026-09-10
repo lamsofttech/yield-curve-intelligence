@@ -32,6 +32,13 @@ before Phase 3 (where we derive Lagrange formally) — does your intuition
 match, and can you say *why* in terms of the basis polynomials themselves,
 not just "gaps are risky"?
 
+**Small task (maturity-label → years mapping):** not attempted by the user;
+answered by the assistant instead (user chose to keep moving). Correct
+mapping and the key trap (months need `/12`, years don't — a naive parser
+that just extracts the leading number would treat "4 Mo" as 4.0 years
+instead of 0.33) recorded in the Phase 2 entry below. Open item to revisit:
+write this mapping yourself from scratch before Phase 3.
+
 ## Phase 1 — Environment and repository setup
 
 **Decisions made:** see `DECISIONS.md` for the full list (repo location,
@@ -53,3 +60,36 @@ split).
   conclusion from the first data point alone.
   **Takeaway:** retry once before treating a fresh-install import error as
   a real bug on this machine.
+
+## Phase 2 — Data acquisition and validation
+
+**Concepts learned:**
+- Par yield vs. zero-coupon/spot yield vs. forward rate are distinct
+  concepts; this project interpolates observed **par yields** only.
+- Real-world financial data schemas evolve — the Treasury maturity grid
+  itself grew from 11 columns (2016) to 14 (2026) as new bill tenors were
+  introduced. Code that hard-codes "the" set of columns breaks the moment
+  the data source adds one. A generic label parser (number + unit) instead
+  of a fixed lookup table is more robust to this.
+- Separating "how to fetch" (`treasury_client.py`, raises on failure) from
+  "how to be graceful when fetching fails" (`loader.py`, catches and falls
+  back) makes each piece independently testable — no test needs to fake a
+  network failure just to check the CSV-parsing logic, and no test needs
+  real CSV content just to check the fallback triggers correctly.
+- `pytest.mark.xfail` as a teaching device: a test for not-yet-implemented
+  code can exist and run (rather than being commented out or absent),
+  reporting XFAIL until the implementation is correct, at which point it
+  flips to XPASS — a concrete, visible "you got it" signal.
+
+**Decisions made:** see `DECISIONS.md` (live endpoint verified, evolving
+schema, sample data bundling approach).
+
+**Left for the user:** `validate_maturity_ordering` in
+`src/data/validation.py` (see the TODO/hints in its docstring) — the tests
+in `tests/data/test_validation.py` marked `xfail` will flip to `XPASS` once
+it's implemented correctly.
+
+**Open questions to revisit:** should the bundled sample data (currently
+2025–2026 only) be extended with a longer historical slice specifically
+for the PCA/anomaly-detection work in Phase 6, given that phase wants
+~10 years of live history? Deferred until Phase 6.

@@ -37,6 +37,21 @@ free tier requires ZeroGPU (with a genuine `@spaces.GPU` function) since
 plain CPU Gradio hosting needs a paid plan on this account. Revisit in
 Phase 10 if these haven't been resolved.
 
+## 2026-09-09 — Verified live Treasury.gov endpoint; maturity grid is not fixed
+
+Confirmed real endpoint:
+`https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/{year}/all?type=daily_treasury_yield_curve&field_tdr_date_value={year}&page&_format=csv`
+— one request per calendar year, CSV, most-recent-row-first, dates as
+`MM/DD/YYYY`.
+
+Column set is **not stable across years** — Treasury has added shorter
+bill tenors over time (2 Mo in ~2020, 4 Mo in ~2022, "1.5 Month" in 2026).
+Decision: the data layer parses maturity labels generically (extract
+number + unit, months divided by 12) rather than using a fixed lookup
+table, and preserves a variable/NaN-containing column set per year rather
+than forcing one fixed schema. Downstream code (interpolation, PCA) must
+each decide how to handle a maturity that's missing for a given date.
+
 ## 2026-09-09 — requirements.txt / requirements-dev.txt split
 
 Runtime deps separate from dev-only tools (pytest, ruff), so the deployed
