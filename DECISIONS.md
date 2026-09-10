@@ -129,3 +129,30 @@ on a no-auth, no-user-data educational app. Deferred to Dependabot
 (configured in .github/dependabot.yml) to propose incremental, reviewable
 version bumps rather than a risky big-bang upgrade under time pressure --
 same judgment call made on the ai-ml-quantitative-research-portfolio repo.
+
+## 2026-09-10 — GPU feature: batched historical stress test, not a no-op
+
+Same ZeroGPU constraint hit on the portfolio project applies here too
+(this account's free Space tier requires it; plain CPU hosting needs
+PRO). Added a genuine feature rather than a fake @spaces.GPU function:
+Lagrange vs. linear interpolation evaluated on a dense grid across the
+*entire* bundled history at once. Because every day shares the same
+maturity grid, this reduces to one (days x nodes) @ (nodes x grid) matrix
+multiply -- verified exactly matching the trusted per-day implementation
+before trusting it (see LEARNING_LOG.md).
+
+Measured, not assumed: the naive per-day Python loop (our existing
+implementation) would take ~23 minutes for the full 2,671-day x
+2,000-point computation; the vectorized batch form takes ~0.24s even on
+CPU. Documented honestly in the app itself that the real speedup is from
+*vectorization*, not GPU hardware specifically -- this problem is small
+enough that GPU's marginal benefit over a already-vectorized CPU
+computation is modest. The tab exists to give the mandatory ZeroGPU
+allocation genuine work, not to claim GPU was strictly necessary.
+
+torch/spaces are NOT added to the base requirements.txt (kept out of
+Docker/CI/local dev, which don't need them) -- app.py imports them in a
+try/except and only shows the GPU tab if available, so the same single
+app.py file serves both the lightweight base deployment and the HF Space
+deployment (which will get its own requirements.txt with torch/spaces
+added) without maintaining two copies of the UI wiring.

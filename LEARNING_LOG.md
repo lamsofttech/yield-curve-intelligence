@@ -214,3 +214,19 @@ Real Docker build verification is deferred to CI's docker job (Phase 9,
 runs on GitHub's Ubuntu runners, which do have Docker) -- "do not claim
 CI passed until we inspect the result" per the project rules; this local
 staging exercise is a strong proxy, not a substitute for that inspection.
+
+## Phase 10 — Deployment (in progress)
+
+**Blocked on GitHub push:** same OAuth `workflow` scope restriction hit
+on the portfolio project -- pushing a commit containing
+`.github/workflows/*.yml` requires the gh CLI token to have `workflow`
+scope, which it doesn't by default. The user is granting this themselves
+(`gh auth refresh -h github.com -s workflow`) since it's a credential
+action Claude Code's classifier blocks me from doing directly.
+
+**GPU feature built and verified while waiting:** implemented, tested
+(matches trusted per-day Lagrange to 1e-8), and verified working with
+torch actually installed locally (not just gracefully absent) -- the
+real numbers: median divergence 1,560,313 percentage points across 2,671
+days, worst case 46,435,627 pp on 2023-04-21. Confirmed the app still
+imports and serves correctly both with and without torch present.
