@@ -174,3 +174,21 @@ end.
 earlier session had bound port 7860 before (recorded from the portfolio
 project) -- checked the port was free before launching this time, avoided
 repeating that debugging detour.
+
+## Phase 8 — Engineering quality
+
+- pip-audit found real CVEs in pillow/starlette (transitive deps of
+  gradio). Deliberately did not force a gradio major-version bump (5->6)
+  under time pressure right before deployment -- deferred to Dependabot
+  (configured now) for incremental, reviewable bumps instead. Documented
+  the reasoning in DECISIONS.md rather than silently ignoring the finding.
+- Secrets scan and hardcoded-path scan: clean (nothing in project code;
+  all hits were inside .venv/ third-party libraries).
+- Added structured logging (utils/logging_config.py) -- previously zero
+  logging anywhere. Wired into loader.py's fallback path (now logs
+  whether live or sample data was used, and why on fallback) and app.py's
+  startup sequence (data loading, PCA fit, anomaly fit, each timestamped).
+- Confirmed (again) no Docker available in this environment -- same
+  constraint hit on the portfolio project. Dockerfile can be written and
+  reviewed but not locally built; Phase 9's CI docker job is the first
+  actual build verification.

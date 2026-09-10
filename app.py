@@ -26,6 +26,7 @@ from models.anomaly import (  # noqa: E402
 from models.loo_validation import rank_methods, validate_all_methods  # noqa: E402
 from models.pca_analysis import fit_pca, label_components  # noqa: E402
 from utils.curve_classification import classify_curve, compute_spreads  # noqa: E402
+from utils.logging_config import get_logger  # noqa: E402
 from visualization.curve_plots import (  # noqa: E402
     plot_anomaly_scores,
     plot_loo_errors,
@@ -33,6 +34,8 @@ from visualization.curve_plots import (  # noqa: E402
     plot_pca_loadings,
     plot_pca_scores,
 )
+
+logger = get_logger(__name__)
 
 # ---------------------------------------------------------------------------
 # Data loaded once at startup. Historical data is bundled (fast, ~1s);
@@ -42,13 +45,24 @@ from visualization.curve_plots import (  # noqa: E402
 # ---------------------------------------------------------------------------
 
 _CURRENT_YEAR = date.today().year
+logger.info("Starting up: loading latest curve data...")
 _latest = load_curve_data(_CURRENT_YEAR - 1, _CURRENT_YEAR)
+logger.info("Latest curve source=%s as_of=%s", _latest.source, _latest.as_of.date())
+
+logger.info("Loading bundled historical data...")
 _historical_tidy = load_historical()
 _panel = to_wide_panel(_historical_tidy)
 _changes = daily_changes(_panel)
+logger.info("Historical panel: %d dates, %d maturities", len(_panel), len(_panel.columns))
+
+logger.info("Fitting PCA...")
 _pca_result = fit_pca(_changes, n_components=3)
 _pca_labels = label_components(_pca_result.loadings)
+logger.info("PCA labels: %s", _pca_labels)
+
+logger.info("Fitting anomaly detector...")
 _anomaly_result = fit_anomaly_detector(_panel)
+logger.info("Startup complete.")
 
 # Dates offered in the Interpolation Lab / Model Validation tabs: the most
 # recent 60 available trading days, plus two dates independently confirmed

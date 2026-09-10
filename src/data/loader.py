@@ -15,6 +15,9 @@ import pandas as pd
 import requests
 
 from data.treasury_client import fetch_years, tidy_wide_table
+from utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 SAMPLE_DIR = Path(__file__).resolve().parents[2] / "data" / "sample"
 HISTORICAL_DIR = Path(__file__).resolve().parents[2] / "data" / "historical"
@@ -41,8 +44,10 @@ def load_curve_data(start_year: int, end_year: int) -> CurveData:
     """
     try:
         table = fetch_years(start_year, end_year)
+        logger.info("Loaded live data: %d rows, %d-%d", len(table), start_year, end_year)
         return CurveData(table=table, source="live", as_of=table["date"].max())
     except requests.RequestException as exc:
+        logger.warning("Live fetch failed (%s); falling back to bundled sample data", exc)
         table = load_sample()
         return CurveData(table=table, source="sample", as_of=table["date"].max(), error=str(exc))
 

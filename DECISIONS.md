@@ -117,3 +117,15 @@ well-known genuine market events, not arbitrary. The current date
 (2026-09-08) ranks in the 1.3rd percentile of historical unusualness --
 a striking real result, surfaced in the app with the required "not a
 trading signal" caveat front and center.
+
+## 2026-09-09 — Known transitive-dependency vulnerabilities, deferred to Dependabot
+
+pip-audit flags CVEs in pillow (11.3.0) and starlette (0.52.1) -- both
+transitive dependencies pulled in by gradio 5.50.0, not pinned directly.
+A newer gradio (6.x) is available but is a major version bump with
+untested API changes; blindly upgrading right before deployment risks
+breaking the already-verified, tested app for marginal security benefit
+on a no-auth, no-user-data educational app. Deferred to Dependabot
+(configured in .github/dependabot.yml) to propose incremental, reviewable
+version bumps rather than a risky big-bang upgrade under time pressure --
+same judgment call made on the ai-ml-quantitative-research-portfolio repo.
