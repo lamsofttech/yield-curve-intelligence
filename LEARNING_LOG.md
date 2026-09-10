@@ -153,3 +153,24 @@ clearly on this date (MAE 0.047, RMSE 0.068, max error 0.18), with linear
 and cubic spline close behind -- real, evidence-based grounds to disqualify
 Lagrange on the full grid and to prefer PCHIP *on this date*, while still
 not over-generalizing from 9 interior points to "PCHIP is always best."
+
+## Phase 7 — Gradio application
+
+Assembled all 7 required sections into app.py, kept as thin UI wiring
+only -- every computation (interpolation, validation, PCA, anomaly
+detection, classification) lives in src/ and is independently tested;
+app.py's job is presentation. Data (live latest curve + bundled 10-year
+history) and the PCA/anomaly fits happen once at module load, not per
+Gradio callback, since they don't depend on user input.
+
+Verified live: the app actually served over HTTP (curl -> 200), and every
+callback function was tested directly with real inputs before trusting
+the UI wiring (interpolation lab, model validation, market overview).
+Both the live 2026-09-09 curve (classified "Normal") and the historical
+2023-10-19 curve (classified "Inverted") produce sensible results end to
+end.
+
+**Problem encountered:** a stale/orphaned background process from an
+earlier session had bound port 7860 before (recorded from the portfolio
+project) -- checked the port was free before launching this time, avoided
+repeating that debugging detour.
