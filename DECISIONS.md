@@ -156,3 +156,13 @@ try/except and only shows the GPU tab if available, so the same single
 app.py file serves both the lightweight base deployment and the HF Space
 deployment (which will get its own requirements.txt with torch/spaces
 added) without maintaining two copies of the UI wiring.
+
+## 2026-09-10 — GitHub push succeeded; Actions blocked by known account billing lock
+
+Push succeeded once the user granted the `workflow` OAuth scope. CI then
+failed in ~2s on every job with "your account is locked due to a billing
+issue" -- the same lamsofttech account constraint already documented from
+the portfolio project, not a bug in this repo's config. Needs the user to
+resolve at github.com/settings/billing; not something fixable here.
+Deployment continues to the HF Space, which is unaffected (separate
+account/system).
